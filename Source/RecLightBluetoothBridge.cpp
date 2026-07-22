@@ -22,7 +22,7 @@ public:
         return "Bluetooth is not available on this platform";
     }
 
-    bool sendCredentials (const juce::String&, const juce::String&, int) override
+    bool sendCredentials (const juce::String&, const juce::String&) override
     {
         return false;
     }
