@@ -14,6 +14,7 @@ OnAirLinkFirmware/sdkconfig.old
 OnAirLinkFirmware/managed_components/
 OnAirLinkFirmware/dependencies.lock
 OnAirLinkFirmware/dist/
+OnAirLinkFirmware/tools/.venv/
 
 # Arduino build output for the older OnAirFirmware sketch
 OnAirFirmware/build/
