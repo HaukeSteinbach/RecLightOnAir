@@ -66,8 +66,12 @@ void OnAirAudioProcessorEditor::paint (juce::Graphics& g)
                 juce::Justification::centredLeft, false);
 
     // Status pill: REC (rot) / PLAY (blau) / IDLE
-    const bool rec  = audioProcessor.lastIsRecording.load() || audioProcessor.manualOn.load();
-    const bool play = !rec && audioProcessor.lastIsPlaying.load();
+    // Uses the same debounced lampIsRecording/lampIsPlaying flags that drive
+    // the ESP's physical LED, so the pill never gets stuck on "REC" once
+    // recording/audio activity has actually stopped, and never flickers
+    // independently of the real lamp state.
+    const bool rec  = audioProcessor.lampIsRecording.load() || audioProcessor.manualOn.load();
+    const bool play = !rec && audioProcessor.lampIsPlaying.load();
     juce::Rectangle<float> pill (float(W) - 96.f, 10.f, 84.f, 22.f);
     const juce::Colour pillCol = rec  ? OALook::recRed
                                 : play ? OALook::accent

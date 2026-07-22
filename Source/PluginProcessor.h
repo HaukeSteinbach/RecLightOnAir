@@ -56,6 +56,19 @@ public:
     std::atomic<int64_t> lastProcessBlockMs { 0 }; // 0 = never called yet
     std::atomic<bool> manualOn { false };         // Toggle: LED permanently on
 
+    // Debounced state actually driving the lamp (set once per timer tick,
+    // 10 Hz) -- the UI reads these instead of the raw playhead flags above so
+    // the "REC" pill never gets stuck on and always matches what the ESP
+    // lamp is doing (see timerCallback()).
+    std::atomic<bool> lampIsRecording { false };
+    std::atomic<bool> lampIsPlaying   { false };
+
+    // Last time processBlock() observed isRecording==true (audio thread).
+    // Used to hold the Recording state briefly through the tiny gaps some
+    // DAWs (Ableton) leave in the recording flag right as recording stops,
+    // which otherwise made the lamp/UI flicker rapidly during that moment.
+    std::atomic<int64_t> lastRecordingTrueMs { 0 };
+
     // ESP reachability (updated via ONAIR_IP broadcast every 10s)
     std::atomic<int64_t> lastEspContactMs { 0 }; // ms timestamp of last contact
     std::atomic<bool>    espReachable      { false };

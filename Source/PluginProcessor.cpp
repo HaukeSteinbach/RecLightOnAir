@@ -274,8 +274,18 @@ void OnAirAudioProcessor::timerCallback()
     const int64_t lastBlock = lastProcessBlockMs.load();
     const bool    audioActive = (lastBlock != 0) && (nowMs - lastBlock < 1500);
 
+    // 400ms hold on the recording flag itself: Ableton's isRecording() flag
+    // briefly flickers false/true for a handful of blocks right as you stop
+    // recording ("abklingen"), which used to make the lamp -- and the REC
+    // pill in the plugin UI, since it read the raw flag directly -- blink
+    // irregularly for a moment. Bridging that gap here fixes both.
+    static constexpr int64_t kRecordingHoldMs = 400;
+    const int64_t lastRecTrue = lastRecordingTrueMs.load();
     const bool isPlaying   = audioActive && lastIsPlaying.load();
-    const bool isRecording = audioActive && lastIsRecording.load();
+    const bool isRecording = audioActive && lastRecTrue != 0 && (nowMs - lastRecTrue < kRecordingHoldMs);
+
+    lampIsPlaying.store (isPlaying);
+    lampIsRecording.store (isRecording);
 
     LampState currentLampState = LampState::Off;
     if (isRecording)     currentLampState = LampState::Recording;
@@ -344,6 +354,8 @@ void OnAirAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 
     lastIsPlaying  .store (isPlay);
     lastIsRecording.store (isRec);
+    if (isRec)
+        lastRecordingTrueMs.store (juce::Time::getMillisecondCounter());
 }
 
 void OnAirAudioProcessor::getStateInformation (juce::MemoryBlock& dest)
